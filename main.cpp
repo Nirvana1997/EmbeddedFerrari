@@ -9,10 +9,10 @@
 #include <opencv2/opencv.hpp>
 
 #define PI 3.1415926
-#define INTERVAL 0.01
+#define INTERVAL 10
 
 //Uncomment this line at run-time to skip GUI rendering
-#define _DEBUG
+//#define _DEBUG
 
 using namespace cv;
 using namespace std;
@@ -45,7 +45,6 @@ int main()
 //            = imread("/Users/qianzhihao/Downloads/11.jpg",CV_LOAD_IMAGE_UNCHANGED);
 //    clog<<"size:"<<image.cols<<" "<<image.rows<<endl;
 
-    int count=0;
 
 	while(true)
 	{
@@ -57,6 +56,8 @@ int main()
             cout<<"empty";
             break;
         }
+
+        int cnt = 0;
 
 		//Set the ROI for the image
 		Rect roi(0,0,image.cols,image.rows);
@@ -78,7 +79,9 @@ int main()
 		float maxRad=-2*PI;
 		float minRad=2*PI;
 		//Draw the lines and judge the slope
-        vector<float> thetas;
+        int max_xs[2];
+        int min_xs[2];
+        int count = 0;
 
 		for(vector<Vec2f>::const_iterator it=lines.begin();it!=lines.end();++it)
 		{
@@ -86,14 +89,19 @@ int main()
 			float theta=(*it)[1];		//Second element is angle theta09
 			//Filter to remove vertical and horizontal lines,
 			//and atan(0.09) equals about 5 degrees.
-			if((theta>0.09&&theta<1.28)||(theta>1.82&&theta<3.05))
-			{
-				if(theta>maxRad)
-					maxRad=theta;
-				if(theta<minRad)
-					minRad=theta;
-
-                thetas.push_back(theta);
+            if((theta>0.09&&theta<1.28)||(theta>1.82&&theta<3.05))
+            {
+                count++;
+                if(theta>maxRad) {
+                    maxRad = theta;
+                    max_xs[0] = rho/cos(theta);
+                    max_xs[1] = (rho-result.rows*sin(theta))/cos(theta);
+                }
+                if(theta<minRad) {
+                    minRad = theta;
+                    min_xs[0] = rho/cos(theta);
+                    min_xs[1] = (rho-result.rows*sin(theta))/cos(theta);
+                }
 
 				#ifdef _DEBUG
 				//point of intersection of the line with first row
@@ -112,46 +120,50 @@ int main()
 			#endif
 		}
 
-        if(thetas.size()>1) {
-
-            sort(thetas.begin(), thetas.end());
-
-            float left = thetas[0];
-            float right = thetas[thetas.size() - 1];
+        if(count>1) {
 
 
-            #ifdef _DEBUG
-            clog<<"left:"<<thetas[0]/PI*180<<" right:"<<thetas[thetas.size()-1]/PI*180;
+//			float left = thetas[0];
+//			float right = thetas[thetas.size() - 1];
+//
+//
+#ifdef _DEBUG
+//			clog<<"left:"<<thetas[0]/PI*180<<" right:"<<thetas[thetas.size()-1]/PI*180;
             stringstream overlayedText;
             overlayedText<<"Lines: "<<lines.size();
             putText(result,overlayedText.str(),Point(10,result.rows-10),2,0.8,Scalar(0,0,255),0);
             imshow(MAIN_WINDOW_NAME,result);
-            #endif
-            if(left>PI/2){
-				turnTo(-2);
-				clog<<"left\n";
-			} else if(right<PI/2){
-				turnTo(2);
-				clog<<"right\n";
-			}
-            else if (left + right > PI + INTERVAL) {
-                turnTo(2);
-
-				clog<<"right\n";
-            } else if (left + right < PI - INTERVAL) {
+#endif
+			if(minRad>PI/2){
                 turnTo(-2);
 				clog<<"left\n";
+			} else if(maxRad<PI/2){
+                turnTo(2);
+				clog<<"right\n";
+			}
+//			else if (left + right > PI + INTERVAL) {
+//				clog<<"right\n";
+//			} else if (left + right < PI - INTERVAL) {
+//				clog<<"left\n";
+//			}
+//			clog<<"left:"<<left/PI*180<<" right:"<<right/PI*180;
+            int mid_x = (min_xs[0]*max_xs[1]-max_xs[0]*min_xs[1])/(max_xs[1]-max_xs[0]-min_xs[1]+min_xs[0]);
+            clog<<image.cols/2<<" "<<mid_x<<"\n";
+
+            if(mid_x<image.cols/2-INTERVAL){
+                turnTo(-2);
+                clog<<"turn left\n";
+            }else if(mid_x>image.cols/2+INTERVAL){
+                turnTo(2);
+                clog<<"turn right\n";
             }
-			clog<<"left:"<<left/PI*180<<" right:"<<right/PI*180;
-            delay(50);
         }
 
-		lines.clear();
-        count++;
-        if(count>20){
+        cnt++;
+        delay(50);
+        if(cnt>20){
             break;
         }
-		waitKey(0);
 	}
 
     init();
