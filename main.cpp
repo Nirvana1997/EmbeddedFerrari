@@ -9,7 +9,7 @@
 #include <opencv2/opencv.hpp>
 
 #define PI 3.1415926
-#define INTERVAL 25
+#define INTERVAL 20
 
 //Uncomment this line at run-time to skip GUI rendering
 //#define _DEBUG
@@ -133,16 +133,15 @@ int main()
             putText(result,overlayedText.str(),Point(10,result.rows-10),2,0.8,Scalar(0,0,255),0);
             imshow(MAIN_WINDOW_NAME,result);
 #endif
-			if(minRad>PI/2||maxRad<PI/2){
-                int left = 0;
-                int right = 0;
-                getCounter(&left,&right);
-                if(left>right){
-                    turnTo(-2);
-                }else if(right>left){
-                    turnTo(2);
-                }
-			}else {
+			if(minRad>PI/2){
+                turnTo(2);
+                clog<<"oneside:turn to right\n";
+			}else if(maxRad<PI/2) {
+                turnTo(-2);
+                clog<<"oneside:turn to left\n";
+            }
+            else
+            {
 
 //			else if (left + right > PI + INTERVAL) {
 //				clog<<"right\n";
@@ -172,6 +171,7 @@ int main()
             }else if(right>left){
                 turnTo(2);
             }
+            clog<<"counter\n";
         }
 
         cnt++;
