@@ -9,7 +9,7 @@
 #include <opencv2/opencv.hpp>
 
 #define PI 3.1415926
-#define INTERVAL 10
+#define INTERVAL 25
 
 //Uncomment this line at run-time to skip GUI rendering
 //#define _DEBUG
@@ -45,6 +45,7 @@ int main()
 //            = imread("/Users/qianzhihao/Downloads/11.jpg",CV_LOAD_IMAGE_UNCHANGED);
 //    clog<<"size:"<<image.cols<<" "<<image.rows<<endl;
 
+    int cnt= 0;
 
 	while(true)
 	{
@@ -56,8 +57,6 @@ int main()
             cout<<"empty";
             break;
         }
-
-        int cnt = 0;
 
 		//Set the ROI for the image
 		Rect roi(0,0,image.cols,image.rows);
@@ -121,7 +120,7 @@ int main()
 		}
 
         if(count>1) {
-
+            clog<<"min:"<<minRad<<" max:"<<maxRad<<"\n";
 
 //			float left = thetas[0];
 //			float right = thetas[thetas.size() - 1];
@@ -134,28 +133,44 @@ int main()
             putText(result,overlayedText.str(),Point(10,result.rows-10),2,0.8,Scalar(0,0,255),0);
             imshow(MAIN_WINDOW_NAME,result);
 #endif
-			if(minRad>PI/2){
-                turnTo(-2);
-				clog<<"left\n";
-			} else if(maxRad<PI/2){
-                turnTo(2);
-				clog<<"right\n";
-			}
+			if(minRad>PI/2||maxRad<PI/2){
+                int left = 0;
+                int right = 0;
+                getCounter(&left,&right);
+                if(left>right){
+                    turnTo(-2);
+                }else if(right>left){
+                    turnTo(2);
+                }
+			}else {
+
 //			else if (left + right > PI + INTERVAL) {
 //				clog<<"right\n";
 //			} else if (left + right < PI - INTERVAL) {
 //				clog<<"left\n";
 //			}
 //			clog<<"left:"<<left/PI*180<<" right:"<<right/PI*180;
-            int mid_x = (min_xs[0]*max_xs[1]-max_xs[0]*min_xs[1])/(max_xs[1]-max_xs[0]-min_xs[1]+min_xs[0]);
-            clog<<image.cols/2<<" "<<mid_x<<"\n";
+                int mid_x = (min_xs[0] * max_xs[1] - max_xs[0] * min_xs[1]) /
+                            (max_xs[1] - max_xs[0] - min_xs[1] + min_xs[0]);
+                clog << image.cols / 2 << " " << mid_x << "\n";
 
-            if(mid_x<image.cols/2-INTERVAL){
+                if (mid_x < image.cols / 2 - INTERVAL) {
+                    turnTo(-2);
+                    clog << "turn left\n";
+                } else if (mid_x > image.cols / 2 + INTERVAL) {
+                    turnTo(2);
+                    clog << "turn right\n";
+                }
+            }
+        }//若没有检测到边
+        else{
+            int left = 0;
+            int right = 0;
+            getCounter(&left,&right);
+            if(left>right){
                 turnTo(-2);
-                clog<<"turn left\n";
-            }else if(mid_x>image.cols/2+INTERVAL){
+            }else if(right>left){
                 turnTo(2);
-                clog<<"turn right\n";
             }
         }
 
@@ -164,9 +179,12 @@ int main()
         if(cnt>20){
             break;
         }
-	}
+
+    }
 
     init();
 
-	return 0;
+    return 0;
+
 }
+
