@@ -48,10 +48,10 @@ RM = /usr/bin/cmake -E remove -f
 EQUALS = =
 
 # The top-level source directory on which CMake was run.
-CMAKE_SOURCE_DIR = /home/pi/LaneDetection-Demo
+CMAKE_SOURCE_DIR = /home/pi/ferrari
 
 # The top-level build directory on which CMake was run.
-CMAKE_BINARY_DIR = /home/pi/LaneDetection-Demo
+CMAKE_BINARY_DIR = /home/pi/ferrari
 
 #=============================================================================
 # Targets provided globally by CMake.

@@ -47,11 +47,16 @@ int main()
 
     int cnt= 0;
 
+    bool start = false;
+    bool hasLine = false;
+
+    string s = "1";
+
 	while(true)
 	{
+
         capture>>image;
-        controlLeft(FORWARD,20);
-        controlRight(FORWARD,20);
+
 
 		if(image.empty()) {
             cout<<"empty";
@@ -74,6 +79,16 @@ int main()
 		Mat result(imgROI.size(),CV_8U,Scalar(255));
 		imgROI.copyTo(result);
 		clog<<lines.size()<<endl;
+
+        if(lines.size()>=3){
+            hasLine = true;
+        }
+        if(hasLine&&!start){
+            turnTo(0);
+            controlLeft(FORWARD,6);
+            controlRight(FORWARD,6);
+            start = true;
+        }
 		
 		float maxRad=-2*PI;
 		float minRad=2*PI;
@@ -101,6 +116,12 @@ int main()
                     min_xs[0] = rho/cos(theta);
                     min_xs[1] = (rho-result.rows*sin(theta))/cos(theta);
                 }
+                //point of intersection of the line with first row
+                Point pt1(rho/cos(theta),0);
+                //point of intersection of the line with last row
+                Point pt2((rho-result.rows*sin(theta))/cos(theta),result.rows);
+                //Draw a line
+                line(result,pt1,pt2,Scalar(0,255,255),3,CV_AA);
 
 				#ifdef _DEBUG
 				//point of intersection of the line with first row
@@ -133,12 +154,15 @@ int main()
             putText(result,overlayedText.str(),Point(10,result.rows-10),2,0.8,Scalar(0,0,255),0);
             imshow(MAIN_WINDOW_NAME,result);
 #endif
+
 			if(minRad>PI/2){
                 turnTo(2);
-                clog<<"oneside:turn to right\n";
-			}else if(maxRad<PI/2) {
-                turnTo(-2);
+                imwrite(s+".png", result);
+                s+="1";
                 clog<<"oneside:turn to left\n";
+			}else if(maxRad<PI/2) {
+                turnTo(-8);
+                clog<<"oneside:turn to right\n";
             }
             else
             {
@@ -154,7 +178,7 @@ int main()
                 clog << image.cols / 2 << " " << mid_x << "\n";
 
                 if (mid_x < image.cols / 2 - INTERVAL) {
-                    turnTo(-2);
+                    turnTo(-6);
                     clog << "turn left\n";
                 } else if (mid_x > image.cols / 2 + INTERVAL) {
                     turnTo(2);
@@ -163,20 +187,20 @@ int main()
             }
         }//若没有检测到边
         else{
-            int left = 0;
-            int right = 0;
-            getCounter(&left,&right);
-            if(left>right){
-                turnTo(-2);
-            }else if(right>left){
-                turnTo(2);
-            }
-            clog<<"counter\n";
+//            int left = 0;
+//            int right = 0;
+//            getCounter(&left,&right);
+//            if(left>right+10){
+//                turnTo(-4);
+//            }else if(right>left-10){
+//                turnTo(2);
+//            }
+//            clog<<"counter\n";
         }
 
         cnt++;
-        delay(50);
-        if(cnt>20){
+        delay(150);
+        if(cnt>100){
             break;
         }
 
