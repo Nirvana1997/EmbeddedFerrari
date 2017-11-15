@@ -9,7 +9,7 @@
 #include <opencv2/opencv.hpp>
 
 #define PI 3.1415926
-#define INTERVAL 20
+#define INTERVAL 3
 
 //Uncomment this line at run-time to skip GUI rendering
 //#define _DEBUG
@@ -31,7 +31,7 @@ int main()
     init();
 
 
-	VideoCapture capture(CAM_PATH);
+	VideoCapture capture(CAM_PATH,CV_LOAD_IMAGE_GRAYSCALE);
 	//If this fails, try to open as a video camera, through the use of an integer param
 	if (!capture.isOpened())
 	{
@@ -80,15 +80,7 @@ int main()
 		imgROI.copyTo(result);
 		clog<<lines.size()<<endl;
 
-        if(lines.size()>=3){
-            hasLine = true;
-        }
-        if(hasLine&&!start){
-            turnTo(0);
-            controlLeft(FORWARD,6);
-            controlRight(FORWARD,6);
-            start = true;
-        }
+
 		
 		float maxRad=-2*PI;
 		float minRad=2*PI;
@@ -125,9 +117,9 @@ int main()
 
 				#ifdef _DEBUG
 				//point of intersection of the line with first row
-				Point pt1(rho/cos(theta),0);
-				//point of intersection of the line with last row
-				Point pt2((rho-result.rows*sin(theta))/cos(theta),result.rows);
+//				Point pt1(rho/cos(theta),0);
+//				//point of intersection of the line with last row
+//				Point pt2((rho-result.rows*sin(theta))/cos(theta),result.rows);
 				//Draw a line
 				line(result,pt1,pt2,Scalar(0,255,255),3,CV_AA);
 				clog<<"pt:"<<pt1<<" "<<pt2<<"\n";
@@ -155,17 +147,34 @@ int main()
             imshow(MAIN_WINDOW_NAME,result);
 #endif
 
-			if(minRad>PI/2){
-                turnTo(2);
-                imwrite(s+".png", result);
+			if(minRad>PI/2&&minRad<PI){
+                turnTo(-3);
+
+                delay(50);
+                stopLeft();
+                stopRight();
+
+                controlLeft(FORWARD,5);
+                controlRight(FORWARD,5);
+//                imwrite(s+".png", result);
                 s+="1";
                 clog<<"oneside:turn to left\n";
-			}else if(maxRad<PI/2) {
-                turnTo(-8);
+			}
+
+            else if(maxRad<PI/2&&minRad>0) {
+                turnTo(8);
+
+                delay(50);
+                stopLeft();
+                stopRight();
+
+                controlLeft(FORWARD,5);
+                controlRight(FORWARD,5);
                 clog<<"oneside:turn to right\n";
             }
-            else
-            {
+            /*
+        else
+        {
 
 //			else if (left + right > PI + INTERVAL) {
 //				clog<<"right\n";
@@ -173,20 +182,22 @@ int main()
 //				clog<<"left\n";
 //			}
 //			clog<<"left:"<<left/PI*180<<" right:"<<right/PI*180;
-                int mid_x = (min_xs[0] * max_xs[1] - max_xs[0] * min_xs[1]) /
-                            (max_xs[1] - max_xs[0] - min_xs[1] + min_xs[0]);
-                clog << image.cols / 2 << " " << mid_x << "\n";
+            int mid_x = (min_xs[0] * max_xs[1] - max_xs[0] * min_xs[1]) /
+                        (max_xs[1] - max_xs[0] - min_xs[1] + min_xs[0]);
+            clog << (min_xs[1]+max_xs[1]) / 2 << " " << mid_x << "\n";
 
-                if (mid_x < image.cols / 2 - INTERVAL) {
-                    turnTo(-6);
-                    clog << "turn left\n";
-                } else if (mid_x > image.cols / 2 + INTERVAL) {
-                    turnTo(2);
-                    clog << "turn right\n";
-                }
+            if (mid_x < (min_xs[1]+max_xs[1]) / 2 - INTERVAL) {
+                turnTo(-6);
+                clog << "turn left\n";
+            } else if (mid_x > (min_xs[1]+max_xs[1]) / 2 + INTERVAL) {
+                turnTo(2);
+                clog << "turn right\n";
             }
-        }//若没有检测到边
-        else{
+        }
+             */
+    }//若没有检测到边
+    else{
+//            turnTo(0);
 //            int left = 0;
 //            int right = 0;
 //            getCounter(&left,&right);
@@ -196,11 +207,21 @@ int main()
 //                turnTo(2);
 //            }
 //            clog<<"counter\n";
+    }
+        if(minRad<PI/2&&maxRad>PI/2){
+            hasLine = true;
+        }
+        if(hasLine&&!start){
+            turnTo(0);
+            controlLeft(FORWARD,5);
+            controlRight(FORWARD,5);
+            start = true;
         }
 
+
+
         cnt++;
-        delay(150);
-        if(cnt>100){
+        if(cnt>1000){
             break;
         }
 
