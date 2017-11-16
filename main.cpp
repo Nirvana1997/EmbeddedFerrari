@@ -10,6 +10,7 @@
 
 #define PI 3.1415926
 #define INTERVAL 3
+#define PARALLEL 5
 
 //Uncomment this line at run-time to skip GUI rendering
 //#define _DEBUG
@@ -45,14 +46,19 @@ int main()
 //            = imread("/Users/qianzhihao/Downloads/11.jpg",CV_LOAD_IMAGE_UNCHANGED);
 //    clog<<"size:"<<image.cols<<" "<<image.rows<<endl;
 
+    //过重点后的循环计数
     int cnt= 0;
 
     bool start = false;
     bool hasLine = false;
 
+    bool seeLine = false;
+
+    bool stop = false;
+
     string s = "1";
 
-	while(true)
+	while(cnt<100)
 	{
 
         capture>>image;
@@ -80,6 +86,10 @@ int main()
 		imgROI.copyTo(result);
 		clog<<lines.size()<<endl;
 
+        if(stop){
+            cnt++;
+        }
+
 
 		
 		float maxRad=-2*PI;
@@ -89,12 +99,26 @@ int main()
         int min_xs[2];
         int count = 0;
 
+        int parallelLines = 0;
+
+        //水平线的最大纵坐标
+        int maxRow = 0;
+
 		for(vector<Vec2f>::const_iterator it=lines.begin();it!=lines.end();++it)
 		{
 			float rho=(*it)[0];			//First element is distance rho
 			float theta=(*it)[1];		//Second element is angle theta09
 			//Filter to remove vertical and horizontal lines,
 			//and atan(0.09) equals about 5 degrees.
+
+            if(theta > 1.45 && theta < 1.65){
+                parallelLines++;
+                if(maxRow<rho){
+                    maxRow = rho;
+                }
+            }
+
+
             if((theta>0.09&&theta<1.28)||(theta>1.82&&theta<3.05))
             {
                 count++;
@@ -132,6 +156,22 @@ int main()
 			#endif
 		}
 
+
+        if(parallelLines >= PARALLEL){
+            clog<<"我看到了终点线"<<"\n";
+            seeLine = true;
+        }
+
+        clog<<"maxRow:"<<maxRow<<" imgRow:"<<imgROI.rows;
+        if(seeLine&&maxRow>imgROI.rows-30){
+            clog<<"我要停了\n";
+            stop = true;
+        }
+
+//        if(seeLine && parallelLines < 2){
+//            clog<<"我要停了"<<"\n";
+//        }
+
         if(count>1) {
             clog<<"min:"<<minRad<<" max:"<<maxRad<<"\n";
 
@@ -148,7 +188,7 @@ int main()
 #endif
 
 			if(minRad>PI/2&&minRad<PI){
-                turnTo(-3);
+                turnTo(-20);
 
                 delay(50);
                 stopLeft();
@@ -216,13 +256,6 @@ int main()
             controlLeft(FORWARD,5);
             controlRight(FORWARD,5);
             start = true;
-        }
-
-
-
-        cnt++;
-        if(cnt>1000){
-            break;
         }
 
     }
